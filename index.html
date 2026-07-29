@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — Personal Dashboard</title>
+<style>
+  :root{
+    --bg: #12151B;
+    --panel: #1A1F28;
+    --panel-alt: #212836;
+    --border: #2A3140;
+    --text: #E7E4DC;
+    --text-dim: #8B93A3;
+    --amber: #E2A63C;
+    --teal: #4FA8A3;
+    --brick: #C1666B;
+    --mono: 'SF Mono', 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:960px; margin:0 auto; padding:20px 16px 80px;}
+
+  /* Header / status strip */
+  header{margin-bottom:24px;}
+  .title-row{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+  h1{
+    font-size:22px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--text);
+  }
+  h1 span{color:var(--amber);}
+  .clock{font-family:var(--mono); font-size:12px; color:var(--text-dim); letter-spacing:0.05em;}
+
+  .stat-strip{
+    display:flex; gap:1px; background:var(--border); border:1px solid var(--border);
+    border-radius:6px; overflow:hidden; font-family:var(--mono);
+  }
+  .stat{flex:1; background:var(--panel); padding:10px 14px; text-align:left;}
+  .stat .num{font-size:20px; font-weight:700;}
+  .stat .lbl{font-size:10px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; margin-top:2px;}
+  .stat.amber .num{color:var(--amber);}
+  .stat.teal .num{color:var(--teal);}
+  .stat.brick .num{color:var(--brick);}
+
+  /* Tabs */
+  .tabs{display:flex; gap:6px; margin:22px 0 16px; border-bottom:1px solid var(--border); padding-bottom:0;}
+  .tab{
+    font-family:var(--mono); font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--text-dim); background:transparent; border:none; padding:10px 4px; cursor:pointer;
+    position:relative; transition:color .15s;
+  }
+  .tab.active{color:var(--text);}
+  .tab.active::after{
+    content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--amber);
+  }
+  .tab:hover{color:var(--text);}
+
+  section{display:none;}
+  section.active{display:block;}
+
+  /* Add form */
+  .add-form{
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:14px; margin-bottom:16px; display:flex; flex-direction:column; gap:10px;
+  }
+  .add-form.row{flex-direction:row; flex-wrap:wrap; align-items:flex-end;}
+  .field{display:flex; flex-direction:column; gap:4px; flex:1; min-width:120px;}
+  .field label{font-size:10px; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase;}
+  input[type=text], input[type=date], textarea, select{
+    background:var(--panel-alt); border:1px solid var(--border); color:var(--text);
+    border-radius:5px; padding:8px 10px; font-family:var(--sans); font-size:14px;
+    outline:none;
+  }
+  input:focus, textarea:focus, select:focus{border-color:var(--amber);}
+  textarea{resize:vertical; min-height:60px; font-family:var(--sans);}
+  input[type=range]{accent-color:var(--amber); width:100%;}
+  button.primary{
+    background:var(--amber); color:#1a1206; border:none; border-radius:5px;
+    padding:9px 16px; font-weight:700; font-size:13px; letter-spacing:0.03em; cursor:pointer;
+    white-space:nowrap;
+  }
+  button.primary:hover{filter:brightness(1.08);}
+  button.ghost{
+    background:transparent; border:1px solid var(--border); color:var(--text-dim);
+    border-radius:5px; padding:6px 10px; font-size:12px; cursor:pointer;
+  }
+  button.ghost:hover{color:var(--brick); border-color:var(--brick);}
+
+  /* Empty state */
+  .empty{
+    border:1px dashed var(--border); border-radius:8px; padding:28px 16px; text-align:center;
+    color:var(--text-dim); font-size:13px; letter-spacing:0.02em;
+  }
+
+  /* Goals — gauge style */
+  .goal-card{background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:10px;}
+  .goal-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px;}
+  .goal-name{font-weight:700; font-size:15px;}
+  .goal-meta{font-family:var(--mono); font-size:11px; color:var(--text-dim);}
+  .gauge{position:relative; height:10px; background:var(--panel-alt); border-radius:5px; overflow:hidden; border:1px solid var(--border);}
+  .gauge-fill{height:100%; background:linear-gradient(90deg, var(--teal), var(--amber)); transition:width .2s;}
+  .gauge-ticks{display:flex; justify-content:space-between; margin-top:4px;}
+  .gauge-ticks span{width:1px; height:4px; background:var(--border);}
+  .goal-controls{display:flex; align-items:center; gap:10px; margin-top:10px;}
+  .goal-controls input[type=range]{flex:1;}
+  .goal-pct{font-family:var(--mono); font-size:12px; width:40px; text-align:right; color:var(--amber);}
+
+  /* Projects — ledger style */
+  .project-row{
+    display:grid; grid-template-columns:auto 1fr auto auto; gap:12px; align-items:center;
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:12px 14px; margin-bottom:8px;
+  }
+  .status-pill{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase;
+    padding:4px 8px; border-radius:20px; text-align:center; white-space:nowrap;
+  }
+  .status-active{background:rgba(226,166,60,0.15); color:var(--amber); border:1px solid rgba(226,166,60,0.4);}
+  .status-waiting{background:rgba(139,147,163,0.15); color:var(--text-dim); border:1px solid var(--border);}
+  .status-done{background:rgba(79,168,163,0.15); color:var(--teal); border:1px solid rgba(79,168,163,0.4);}
+  .project-body .p-name{font-weight:700; font-size:14px; margin-bottom:2px;}
+  .project-body .p-notes{font-size:12px; color:var(--text-dim);}
+  .project-date{font-family:var(--mono); font-size:11px; color:var(--text-dim); white-space:nowrap;}
+
+  /* Ideas — log/notebook style */
+  .idea-entry{
+    border-left:2px solid var(--border); padding:4px 0 14px 14px; margin-bottom:2px; position:relative;
+  }
+  .idea-entry::before{
+    content:""; position:absolute; left:-5px; top:8px; width:8px; height:8px; border-radius:50%;
+    background:var(--amber);
+  }
+  .idea-time{font-family:var(--mono); font-size:11px; color:var(--text-dim); margin-bottom:4px;}
+  .idea-text{font-size:14px; line-height:1.5; white-space:pre-wrap;}
+
+  .card-actions{display:flex; gap:6px; justify-content:flex-end;}
+
+  @media (max-width:560px){
+    .stat-strip{flex-wrap:wrap;}
+    .stat{min-width:45%;}
+    .project-row{grid-template-columns:1fr; text-align:left;}
+    .card-actions{justify-content:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title-row">
+      <h1>SIGNAL<span>_</span> BOARD</h1>
+      <div class="clock" id="clock"></div>
+    </div>
+    <div class="stat-strip">
+      <div class="stat amber"><div class="num" id="statActive">0</div><div class="lbl">Active Projects</div></div>
+      <div class="stat teal"><div class="num" id="statGoals">0</div><div class="lbl">Goals In Motion</div></div>
+      <div class="stat brick"><div class="num" id="statIdeas">0</div><div class="lbl">Ideas Logged</div></div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="goals">Goals</button>
+    <button class="tab" data-tab="projects">Projects</button>
+    <button class="tab" data-tab="ideas">Brain Dump</button>
+  </nav>
+
+  <!-- GOALS -->
+  <section id="goals" class="active">
+    <form class="add-form" id="goalForm">
+      <div class="add-form row">
+        <div class="field" style="flex:2;">
+          <label>Goal</label>
+          <input type="text" id="goalName" placeholder="e.g. Ship v1 of the app" required>
+        </div>
+        <div class="field">
+          <label>Deadline</label>
+          <input type="date" id="goalDeadline">
+        </div>
+        <button class="primary" type="submit">Add Goal</button>
+      </div>
+    </form>
+    <div id="goalsList"></div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <form class="add-form" id="projectForm">
+      <div class="add-form row">
+        <div class="field" style="flex:2;">
+          <label>Project</label>
+          <input type="text" id="projName" placeholder="e.g. Redesign portfolio site" required>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="projStatus">
+            <option value="active">Active</option>
+            <option value="waiting">Waiting</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="projNotes" placeholder="Context, next step, blockers..."></textarea>
+      </div>
+      <button class="primary" type="submit" style="align-self:flex-start;">Add Project</button>
+    </form>
+    <div id="projectsList"></div>
+  </section>
+
+  <!-- IDEAS / BRAIN DUMP -->
+  <section id="ideas">
+    <form class="add-form" id="ideaForm">
+      <div class="field">
+        <label>New Entry</label>
+        <textarea id="ideaText" placeholder="Dump a thought, a fragment, a maybe-terrible idea..." required></textarea>
+      </div>
+      <button class="primary" type="submit" style="align-self:flex-start;">Log It</button>
+    </form>
+    <div id="ideasList"></div>
+  </section>
+</div>
+
+<script>
+let DATA = { goals: [], projects: [], ideas: [] };
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+async function loadData(){
+  try{
+    const res = await window.storage.get('dashboard-data', false);
+    if(res && res.value){ DATA = JSON.parse(res.value); }
+  }catch(e){ /* no existing data yet */ }
+  renderAll();
+}
+
+async function saveData(){
+  try{
+    await window.storage.set('dashboard-data', JSON.stringify(DATA), false);
+  }catch(e){ console.error('Save failed', e); }
+}
+
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined,{month:'short', day:'numeric'}) + ' · ' +
+         d.toLocaleTimeString(undefined,{hour:'2-digit', minute:'2-digit'});
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- CLOCK ---------- */
+function tickClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'}) + '  ' + now.toLocaleTimeString(undefined,{hour:'2-digit', minute:'2-digit'});
+}
+tickClock(); setInterval(tickClock, 30000);
+
+/* ---------- GOALS ---------- */
+document.getElementById('goalForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = document.getElementById('goalName').value.trim();
+  const deadline = document.getElementById('goalDeadline').value;
+  if(!name) return;
+  DATA.goals.unshift({ id:uid(), name, deadline, progress:0 });
+  document.getElementById('goalName').value='';
+  document.getElementById('goalDeadline').value='';
+  saveData(); renderGoals(); renderStats();
+});
+
+function renderGoals(){
+  const list = document.getElementById('goalsList');
+  if(DATA.goals.length===0){
+    list.innerHTML = '<div class="empty">No goals yet. Add one above to start tracking progress.</div>';
+    return;
+  }
+  list.innerHTML = DATA.goals.map(g=>`
+    <div class="goal-card">
+      <div class="goal-top">
+        <div class="goal-name">${escapeHtml(g.name)}</div>
+        <div class="goal-meta">${g.deadline ? 'DUE ' + g.deadline : 'NO DEADLINE'}</div>
+      </div>
+      <div class="gauge"><div class="gauge-fill" style="width:${g.progress}%"></div></div>
+      <div class="goal-controls">
+        <input type="range" min="0" max="100" value="${g.progress}" data-id="${g.id}" class="goalRange">
+        <div class="goal-pct">${g.progress}%</div>
+        <button class="ghost" data-id="${g.id}" data-action="delete-goal">Remove</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.goalRange').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const g = DATA.goals.find(x=>x.id===e.target.dataset.id);
+      g.progress = parseInt(e.target.value);
+      e.target.closest('.goal-card').querySelector('.gauge-fill').style.width = g.progress + '%';
+      e.target.closest('.goal-card').querySelector('.goal-pct').textContent = g.progress + '%';
+    });
+    inp.addEventListener('change', ()=>{ saveData(); renderStats(); });
+  });
+  list.querySelectorAll('[data-action="delete-goal"]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      DATA.goals = DATA.goals.filter(g=>g.id!==e.target.dataset.id);
+      saveData(); renderGoals(); renderStats();
+    });
+  });
+}
+
+/* ---------- PROJECTS ---------- */
+document.getElementById('projectForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = document.getElementById('projName').value.trim();
+  const status = document.getElementById('projStatus').value;
+  const notes = document.getElementById('projNotes').value.trim();
+  if(!name) return;
+  DATA.projects.unshift({ id:uid(), name, status, notes, updated: Date.now() });
+  document.getElementById('projName').value='';
+  document.getElementById('projNotes').value='';
+  document.getElementById('projStatus').value='active';
+  saveData(); renderProjects(); renderStats();
+});
+
+function renderProjects(){
+  const list = document.getElementById('projectsList');
+  if(DATA.projects.length===0){
+    list.innerHTML = '<div class="empty">No projects yet. Add one above to get it on the board.</div>';
+    return;
+  }
+  list.innerHTML = DATA.projects.map(p=>`
+    <div class="project-row">
+      <div class="status-pill status-${p.status}">${p.status}</div>
+      <div class="project-body">
+        <div class="p-name">${escapeHtml(p.name)}</div>
+        ${p.notes ? `<div class="p-notes">${escapeHtml(p.notes)}</div>` : ''}
+      </div>
+      <div class="project-date">${fmtDate(p.updated)}</div>
+      <div class="card-actions">
+        <select class="statusSelect" data-id="${p.id}">
+          <option value="active" ${p.status==='active'?'selected':''}>Active</option>
+          <option value="waiting" ${p.status==='waiting'?'selected':''}>Waiting</option>
+          <option value="done" ${p.status==='done'?'selected':''}>Done</option>
+        </select>
+        <button class="ghost" data-id="${p.id}" data-action="delete-proj">Remove</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.statusSelect').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      const p = DATA.projects.find(x=>x.id===e.target.dataset.id);
+      p.status = e.target.value; p.updated = Date.now();
+      saveData(); renderProjects(); renderStats();
+    });
+  });
+  list.querySelectorAll('[data-action="delete-proj"]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      DATA.projects = DATA.projects.filter(p=>p.id!==e.target.dataset.id);
+      saveData(); renderProjects(); renderStats();
+    });
+  });
+}
+
+/* ---------- IDEAS ---------- */
+document.getElementById('ideaForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const text = document.getElementById('ideaText').value.trim();
+  if(!text) return;
+  DATA.ideas.unshift({ id:uid(), text, created: Date.now() });
+  document.getElementById('ideaText').value='';
+  saveData(); renderIdeas(); renderStats();
+});
+
+function renderIdeas(){
+  const list = document.getElementById('ideasList');
+  if(DATA.ideas.length===0){
+    list.innerHTML = '<div class="empty">Nothing logged yet. Dump a thought above, no need to make it tidy.</div>';
+    return;
+  }
+  list.innerHTML = DATA.ideas.map(i=>`
+    <div class="idea-entry">
+      <div class="idea-time">${fmtDate(i.created)}</div>
+      <div class="idea-text">${escapeHtml(i.text)}</div>
+      <div class="card-actions" style="margin-top:6px;">
+        <button class="ghost" data-id="${i.id}" data-action="delete-idea">Remove</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-action="delete-idea"]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      DATA.ideas = DATA.ideas.filter(i=>i.id!==e.target.dataset.id);
+      saveData(); renderIdeas(); renderStats();
+    });
+  });
+}
+
+/* ---------- STATS ---------- */
+function renderStats(){
+  document.getElementById('statActive').textContent = DATA.projects.filter(p=>p.status==='active').length;
+  document.getElementById('statGoals').textContent = DATA.goals.filter(g=>g.progress<100).length;
+  document.getElementById('statIdeas').textContent = DATA.ideas.length;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function renderAll(){
+  renderGoals(); renderProjects(); renderIdeas(); renderStats();
+}
+
+loadData();
+</script>
+</body>
+</html>
