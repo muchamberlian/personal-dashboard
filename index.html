@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Signal — Personal Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg: #12151B;
@@ -143,6 +144,41 @@
 
   .card-actions{display:flex; gap:6px; justify-content:flex-end;}
 
+  /* Vacation countdown */
+  .vacation-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:28px 20px; text-align:center;
+  }
+  .vacation-dest{font-size:16px; font-weight:700; letter-spacing:0.04em; margin-bottom:4px;}
+  .vacation-date{font-family:var(--mono); font-size:12px; color:var(--text-dim); margin-bottom:18px;}
+  .vacation-count{font-family:var(--mono); font-size:56px; font-weight:800; color:var(--amber); line-height:1;}
+  .vacation-unit{font-family:var(--mono); font-size:11px; color:var(--text-dim); letter-spacing:0.2em; text-transform:uppercase; margin-top:4px;}
+  .vacation-here{font-size:18px; font-weight:700; color:var(--teal); margin:10px 0;}
+  .vacation-actions{display:flex; gap:8px; justify-content:center; margin-top:18px;}
+
+  /* Auth screen */
+  .auth-wrap{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .auth-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:28px 26px; width:100%; max-width:340px;
+  }
+  .auth-card h1{font-size:18px; margin-bottom:4px;}
+  .auth-sub{font-size:12px; color:var(--text-dim); margin-bottom:18px;}
+  .auth-card .field{margin-bottom:12px;}
+  .auth-card input{width:100%;}
+  .auth-msg{font-family:var(--mono); font-size:12px; margin-top:10px; min-height:16px;}
+  .auth-msg.err{color:var(--brick);}
+  .auth-msg.ok{color:var(--teal);}
+  .auth-toggle{font-size:12px; color:var(--text-dim); margin-top:14px; text-align:center;}
+  .auth-toggle button{
+    background:none; border:none; color:var(--amber); cursor:pointer; font-size:12px; text-decoration:underline;
+  }
+  .hidden{display:none !important;}
+  .top-bar-account{display:flex; justify-content:flex-end; margin-bottom:8px;}
+  .top-bar-account button{font-family:var(--mono);}
+
   @media (max-width:560px){
     .stat-strip{flex-wrap:wrap;}
     .stat{min-width:45%;}
@@ -152,7 +188,32 @@
 </style>
 </head>
 <body>
-<div class="app">
+
+<div class="auth-wrap" id="authScreen">
+  <div class="auth-card">
+    <h1>SIGNAL BOARD</h1>
+    <div class="auth-sub" id="authSub">Log in to sync your board across devices.</div>
+    <div class="field">
+      <label>Email</label>
+      <input type="text" id="authEmail" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="text" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password">
+    </div>
+    <button class="primary" id="authSubmit" style="width:100%;">Log In</button>
+    <div class="auth-msg" id="authMsg"></div>
+    <div class="auth-toggle">
+      <span id="authToggleText">Don't have an account?</span>
+      <button id="authToggleBtn">Sign up</button>
+    </div>
+  </div>
+</div>
+
+<div class="app hidden" id="dashboardApp">
+  <div class="top-bar-account">
+    <button class="ghost" id="logoutBtn">Log Out</button>
+  </div>
   <header>
     <div class="title-row">
       <h1>SIGNAL<span>_</span> BOARD</h1>
@@ -162,6 +223,7 @@
       <div class="stat amber"><div class="num" id="statActive">0</div><div class="lbl">Active Projects</div></div>
       <div class="stat teal"><div class="num" id="statGoals">0</div><div class="lbl">Goals In Motion</div></div>
       <div class="stat brick"><div class="num" id="statIdeas">0</div><div class="lbl">Ideas Logged</div></div>
+      <div class="stat teal"><div class="num" id="statVacation">—</div><div class="lbl">Days To Vacation</div></div>
     </div>
   </header>
 
@@ -169,6 +231,7 @@
     <button class="tab active" data-tab="goals">Goals</button>
     <button class="tab" data-tab="projects">Projects</button>
     <button class="tab" data-tab="ideas">Brain Dump</button>
+    <button class="tab" data-tab="vacation">Vacation</button>
   </nav>
 
   <!-- GOALS -->
@@ -226,26 +289,132 @@
     </form>
     <div id="ideasList"></div>
   </section>
+
+  <section id="vacation">
+    <div id="vacationDisplay"></div>
+    <form class="add-form" id="vacationForm" style="margin-top:16px;">
+      <div class="add-form row">
+        <div class="field" style="flex:2;">
+          <label>Destination</label>
+          <input type="text" id="vacationDest" placeholder="e.g. Lisbon, Portugal" required>
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="vacationDate" required>
+        </div>
+        <button class="primary" type="submit" style="width:auto;">Set Vacation</button>
+      </div>
+    </form>
+  </section>
 </div>
 
 <script>
-let DATA = { goals: [], projects: [], ideas: [] };
+/* ---------- SUPABASE CONFIG ---------- */
+/* Fill these in from your Supabase project: Settings → API */
+const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const TABLE = 'signal_board_data';
+
+let DATA = { goals: [], projects: [], ideas: [], vacation: null };
+let currentUser = null;
+let isSignupMode = false;
+let saveTimer = null;
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
+function showDashboard(){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('dashboardApp').classList.remove('hidden');
+}
+function showAuthScreen(){
+  document.getElementById('dashboardApp').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('hidden');
+}
+function setAuthMsg(text, type){
+  const msg = document.getElementById('authMsg');
+  msg.textContent = text;
+  msg.className = 'auth-msg' + (type ? ' ' + type : '');
+}
+
 async function loadData(){
-  try{
-    const res = await window.storage.get('dashboard-data', false);
-    if(res && res.value){ DATA = JSON.parse(res.value); }
-  }catch(e){ /* no existing data yet */ }
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    currentUser = session.user;
+    await fetchBoardData();
+    showDashboard();
+  } else {
+    showAuthScreen();
+  }
+}
+
+async function fetchBoardData(){
+  const { data, error } = await sb.from(TABLE).select('data').eq('user_id', currentUser.id).maybeSingle();
+  if(error){ console.error(error); }
+  if(data && data.data){
+    DATA = data.data;
+    if(!('vacation' in DATA)) DATA.vacation = null;
+  } else {
+    DATA = { goals: [], projects: [], ideas: [], vacation: null };
+    await sb.from(TABLE).insert({ user_id: currentUser.id, data: DATA });
+  }
   renderAll();
 }
 
-async function saveData(){
-  try{
-    await window.storage.set('dashboard-data', JSON.stringify(DATA), false);
-  }catch(e){ console.error('Save failed', e); }
+/* Debounced save so rapid actions (like dragging a goal slider) don't spam the database */
+function saveData(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    if(!currentUser) return;
+    try{
+      await sb.from(TABLE).upsert(
+        { user_id: currentUser.id, data: DATA, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      );
+    }catch(e){ console.error('Save failed', e); }
+  }, 400);
 }
+
+/* ---------- AUTH ---------- */
+document.getElementById('authToggleBtn').addEventListener('click', ()=>{
+  isSignupMode = !isSignupMode;
+  document.getElementById('authSubmit').textContent = isSignupMode ? 'Sign Up' : 'Log In';
+  document.getElementById('authToggleText').textContent = isSignupMode ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('authToggleBtn').textContent = isSignupMode ? 'Log In' : 'Sign up';
+  setAuthMsg('', null);
+});
+
+document.getElementById('authSubmit').addEventListener('click', async ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password){ setAuthMsg('Enter an email and password.', 'err'); return; }
+  if(password.length < 6){ setAuthMsg('Password needs at least 6 characters.', 'err'); return; }
+
+  setAuthMsg(isSignupMode ? 'Creating account…' : 'Logging in…', null);
+  try{
+    const result = isSignupMode
+      ? await sb.auth.signUp({ email, password })
+      : await sb.auth.signInWithPassword({ email, password });
+
+    if(result.error){ setAuthMsg(result.error.message, 'err'); return; }
+
+    if(isSignupMode && !result.data.session){
+      setAuthMsg('Check your email to confirm, then log in.', 'ok');
+      return;
+    }
+    currentUser = result.data.user || result.data.session.user;
+    await fetchBoardData();
+    showDashboard();
+  }catch(e){
+    setAuthMsg('Something went wrong. Try again.', 'err');
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+  currentUser = null;
+  showAuthScreen();
+});
 
 function fmtDate(ts){
   const d = new Date(ts);
@@ -408,11 +577,64 @@ function renderIdeas(){
   });
 }
 
+/* ---------- VACATION ---------- */
+document.getElementById('vacationForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const destination = document.getElementById('vacationDest').value.trim();
+  const date = document.getElementById('vacationDate').value;
+  if(!destination || !date) return;
+  DATA.vacation = { destination, date };
+  document.getElementById('vacationDest').value = '';
+  document.getElementById('vacationDate').value = '';
+  saveData(); renderVacation(); renderStats();
+});
+
+function daysUntil(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  return Math.round((target - today) / 86400000);
+}
+
+function renderVacation(){
+  const el = document.getElementById('vacationDisplay');
+  if(!DATA.vacation){
+    el.innerHTML = '<div class="empty">No vacation set. Add a destination and date below.</div>';
+    return;
+  }
+  const days = daysUntil(DATA.vacation.date);
+  const dateLabel = new Date(DATA.vacation.date + 'T00:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+
+  let middle;
+  if(days > 0){
+    middle = `<div class="vacation-count">${days}</div><div class="vacation-unit">${days===1?'Day':'Days'} To Go</div>`;
+  } else if(days === 0){
+    middle = `<div class="vacation-here">You're off today. Enjoy it. ✈</div>`;
+  } else {
+    middle = `<div class="vacation-here">Hope it was a great trip.</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="vacation-card">
+      <div class="vacation-dest">${escapeHtml(DATA.vacation.destination)}</div>
+      <div class="vacation-date">${dateLabel}</div>
+      ${middle}
+      <div class="vacation-actions">
+        <button class="ghost" id="clearVacation">Clear</button>
+      </div>
+    </div>`;
+
+  document.getElementById('clearVacation').addEventListener('click', ()=>{
+    DATA.vacation = null;
+    saveData(); renderVacation(); renderStats();
+  });
+}
+
 /* ---------- STATS ---------- */
 function renderStats(){
   document.getElementById('statActive').textContent = DATA.projects.filter(p=>p.status==='active').length;
   document.getElementById('statGoals').textContent = DATA.goals.filter(g=>g.progress<100).length;
   document.getElementById('statIdeas').textContent = DATA.ideas.length;
+  document.getElementById('statVacation').textContent = DATA.vacation ? Math.max(daysUntil(DATA.vacation.date), 0) : '—';
 }
 
 function escapeHtml(str){
@@ -422,7 +644,7 @@ function escapeHtml(str){
 }
 
 function renderAll(){
-  renderGoals(); renderProjects(); renderIdeas(); renderStats();
+  renderGoals(); renderProjects(); renderIdeas(); renderVacation(); renderStats();
 }
 
 loadData();
