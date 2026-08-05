@@ -1,3 +1,7 @@
+
+
+
+Dashboard · HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,7 +33,7 @@
     -webkit-font-smoothing:antialiased;
   }
   .app{max-width:960px; margin:0 auto; padding:20px 16px 80px;}
-
+ 
   /* Header / status strip */
   header{margin-bottom:24px;}
   .title-row{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
@@ -39,7 +43,7 @@
   }
   h1 span{color:var(--amber);}
   .clock{font-family:var(--mono); font-size:12px; color:var(--text-dim); letter-spacing:0.05em;}
-
+ 
   .stat-strip{
     display:flex; gap:1px; background:var(--border); border:1px solid var(--border);
     border-radius:6px; overflow:hidden; font-family:var(--mono);
@@ -50,7 +54,7 @@
   .stat.amber .num{color:var(--amber);}
   .stat.teal .num{color:var(--teal);}
   .stat.brick .num{color:var(--brick);}
-
+ 
   /* Tabs */
   .tabs{display:flex; gap:6px; margin:22px 0 16px; border-bottom:1px solid var(--border); padding-bottom:0;}
   .tab{
@@ -63,10 +67,10 @@
     content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--amber);
   }
   .tab:hover{color:var(--text);}
-
+ 
   section{display:none;}
   section.active{display:block;}
-
+ 
   /* Add form */
   .add-form{
     background:var(--panel); border:1px solid var(--border); border-radius:8px;
@@ -75,7 +79,7 @@
   .add-form.row{flex-direction:row; flex-wrap:wrap; align-items:flex-end;}
   .field{display:flex; flex-direction:column; gap:4px; flex:1; min-width:120px;}
   .field label{font-size:10px; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase;}
-  input[type=text], input[type=date], textarea, select{
+  input[type=text], input[type=date], input[type=password], textarea, select{
     background:var(--panel-alt); border:1px solid var(--border); color:var(--text);
     border-radius:5px; padding:8px 10px; font-family:var(--sans); font-size:14px;
     outline:none;
@@ -94,13 +98,13 @@
     border-radius:5px; padding:6px 10px; font-size:12px; cursor:pointer;
   }
   button.ghost:hover{color:var(--brick); border-color:var(--brick);}
-
+ 
   /* Empty state */
   .empty{
     border:1px dashed var(--border); border-radius:8px; padding:28px 16px; text-align:center;
     color:var(--text-dim); font-size:13px; letter-spacing:0.02em;
   }
-
+ 
   /* Goals — gauge style */
   .goal-card{background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:10px;}
   .goal-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px;}
@@ -113,7 +117,7 @@
   .goal-controls{display:flex; align-items:center; gap:10px; margin-top:10px;}
   .goal-controls input[type=range]{flex:1;}
   .goal-pct{font-family:var(--mono); font-size:12px; width:40px; text-align:right; color:var(--amber);}
-
+ 
   /* Projects — ledger style */
   .project-row{
     display:grid; grid-template-columns:auto 1fr auto auto; gap:12px; align-items:center;
@@ -130,7 +134,7 @@
   .project-body .p-name{font-weight:700; font-size:14px; margin-bottom:2px;}
   .project-body .p-notes{font-size:12px; color:var(--text-dim);}
   .project-date{font-family:var(--mono); font-size:11px; color:var(--text-dim); white-space:nowrap;}
-
+ 
   /* Ideas — log/notebook style */
   .idea-entry{
     border-left:2px solid var(--border); padding:4px 0 14px 14px; margin-bottom:2px; position:relative;
@@ -141,9 +145,9 @@
   }
   .idea-time{font-family:var(--mono); font-size:11px; color:var(--text-dim); margin-bottom:4px;}
   .idea-text{font-size:14px; line-height:1.5; white-space:pre-wrap;}
-
+ 
   .card-actions{display:flex; gap:6px; justify-content:flex-end;}
-
+ 
   /* Vacation countdown */
   .vacation-card{
     background:var(--panel); border:1px solid var(--border); border-radius:10px;
@@ -155,7 +159,7 @@
   .vacation-unit{font-family:var(--mono); font-size:11px; color:var(--text-dim); letter-spacing:0.2em; text-transform:uppercase; margin-top:4px;}
   .vacation-here{font-size:18px; font-weight:700; color:var(--teal); margin:10px 0;}
   .vacation-actions{display:flex; gap:8px; justify-content:center; margin-top:18px;}
-
+ 
   /* Auth screen */
   .auth-wrap{
     min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
@@ -178,7 +182,7 @@
   .hidden{display:none !important;}
   .top-bar-account{display:flex; justify-content:flex-end; margin-bottom:8px;}
   .top-bar-account button{font-family:var(--mono);}
-
+ 
   @media (max-width:560px){
     .stat-strip{flex-wrap:wrap;}
     .stat{min-width:45%;}
@@ -188,10 +192,10 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="auth-wrap" id="authScreen">
   <div class="auth-card">
-    <h1>SIGNAL BOARD</h1>
+    <h1 id="authTitle">Login to Signal</h1>
     <div class="auth-sub" id="authSub">Log in to sync your board across devices.</div>
     <div class="field">
       <label>Email</label>
@@ -199,7 +203,11 @@
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="text" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password">
+      <input type="password" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password">
+    </div>
+    <div class="field hidden" id="confirmPasswordField">
+      <label>Confirm Password</label>
+      <input type="password" id="authPasswordConfirm" placeholder="Re-enter your password" autocomplete="new-password">
     </div>
     <button class="primary" id="authSubmit" style="width:100%;">Log In</button>
     <div class="auth-msg" id="authMsg"></div>
@@ -209,7 +217,8 @@
     </div>
   </div>
 </div>
-
+ 
+ 
 <div class="app hidden" id="dashboardApp">
   <div class="top-bar-account">
     <button class="ghost" id="logoutBtn">Log Out</button>
@@ -226,14 +235,14 @@
       <div class="stat teal"><div class="num" id="statVacation">—</div><div class="lbl">Days To Vacation</div></div>
     </div>
   </header>
-
+ 
   <nav class="tabs">
     <button class="tab active" data-tab="goals">Goals</button>
     <button class="tab" data-tab="projects">Projects</button>
     <button class="tab" data-tab="ideas">Brain Dump</button>
     <button class="tab" data-tab="vacation">Vacation</button>
   </nav>
-
+ 
   <!-- GOALS -->
   <section id="goals" class="active">
     <form class="add-form" id="goalForm">
@@ -251,7 +260,7 @@
     </form>
     <div id="goalsList"></div>
   </section>
-
+ 
   <!-- PROJECTS -->
   <section id="projects">
     <form class="add-form" id="projectForm">
@@ -277,7 +286,7 @@
     </form>
     <div id="projectsList"></div>
   </section>
-
+ 
   <!-- IDEAS / BRAIN DUMP -->
   <section id="ideas">
     <form class="add-form" id="ideaForm">
@@ -289,7 +298,7 @@
     </form>
     <div id="ideasList"></div>
   </section>
-
+ 
   <section id="vacation">
     <div id="vacationDisplay"></div>
     <form class="add-form" id="vacationForm" style="margin-top:16px;">
@@ -307,7 +316,7 @@
     </form>
   </section>
 </div>
-
+ 
 <script>
 /* ---------- SUPABASE CONFIG ---------- */
 /* Fill these in from your Supabase project: Settings → API */
@@ -315,14 +324,14 @@ const SUPABASE_URL = 'https://nacthvsfmtcvqndrdnmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hY3RodnNmbXRjdnFuZHJkbm1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDkwMDksImV4cCI6MjEwMDkyNTAwOX0.ZtxtaahQ-AD1pEAySd_2Kywxi9m08t7ENUNSiBD0K5U';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const TABLE = 'signal_board_data';
-
+ 
 let DATA = { goals: [], projects: [], ideas: [], vacation: null };
 let currentUser = null;
 let isSignupMode = false;
 let saveTimer = null;
-
+ 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-
+ 
 function showDashboard(){
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('dashboardApp').classList.remove('hidden');
@@ -336,7 +345,7 @@ function setAuthMsg(text, type){
   msg.textContent = text;
   msg.className = 'auth-msg' + (type ? ' ' + type : '');
 }
-
+ 
 async function loadData(){
   const { data: { session } } = await sb.auth.getSession();
   if(session){
@@ -347,7 +356,7 @@ async function loadData(){
     showAuthScreen();
   }
 }
-
+ 
 async function fetchBoardData(){
   const { data, error } = await sb.from(TABLE).select('data').eq('user_id', currentUser.id).maybeSingle();
   if(error){ console.error(error); }
@@ -360,7 +369,7 @@ async function fetchBoardData(){
   }
   renderAll();
 }
-
+ 
 /* Debounced save so rapid actions (like dragging a goal slider) don't spam the database */
 function saveData(){
   clearTimeout(saveTimer);
@@ -374,30 +383,46 @@ function saveData(){
     }catch(e){ console.error('Save failed', e); }
   }, 400);
 }
-
+ 
 /* ---------- AUTH ---------- */
-document.getElementById('authToggleBtn').addEventListener('click', ()=>{
-  isSignupMode = !isSignupMode;
+function applyAuthMode(){
+  document.getElementById('authTitle').textContent = isSignupMode ? 'Sign up for Signal' : 'Login to Signal';
+  document.getElementById('authSub').textContent = isSignupMode
+    ? 'Create an account to start syncing your board.'
+    : 'Log in to sync your board across devices.';
   document.getElementById('authSubmit').textContent = isSignupMode ? 'Sign Up' : 'Log In';
   document.getElementById('authToggleText').textContent = isSignupMode ? 'Already have an account?' : "Don't have an account?";
   document.getElementById('authToggleBtn').textContent = isSignupMode ? 'Log In' : 'Sign up';
+  document.getElementById('confirmPasswordField').classList.toggle('hidden', !isSignupMode);
+  document.getElementById('authPasswordConfirm').value = '';
   setAuthMsg('', null);
+}
+ 
+document.getElementById('authToggleBtn').addEventListener('click', ()=>{
+  isSignupMode = !isSignupMode;
+  applyAuthMode();
 });
-
+ 
 document.getElementById('authSubmit').addEventListener('click', async ()=>{
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   if(!email || !password){ setAuthMsg('Enter an email and password.', 'err'); return; }
   if(password.length < 6){ setAuthMsg('Password needs at least 6 characters.', 'err'); return; }
-
+ 
+  if(isSignupMode){
+    const confirmPassword = document.getElementById('authPasswordConfirm').value;
+    if(!confirmPassword){ setAuthMsg('Please confirm your password.', 'err'); return; }
+    if(password !== confirmPassword){ setAuthMsg('Passwords don\u2019t match.', 'err'); return; }
+  }
+ 
   setAuthMsg(isSignupMode ? 'Creating account…' : 'Logging in…', null);
   try{
     const result = isSignupMode
       ? await sb.auth.signUp({ email, password })
       : await sb.auth.signInWithPassword({ email, password });
-
+ 
     if(result.error){ setAuthMsg(result.error.message, 'err'); return; }
-
+ 
     if(isSignupMode && !result.data.session){
       setAuthMsg('Check your email to confirm, then log in.', 'ok');
       return;
@@ -409,19 +434,19 @@ document.getElementById('authSubmit').addEventListener('click', async ()=>{
     setAuthMsg('Something went wrong. Try again.', 'err');
   }
 });
-
+ 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await sb.auth.signOut();
   currentUser = null;
   showAuthScreen();
 });
-
+ 
 function fmtDate(ts){
   const d = new Date(ts);
   return d.toLocaleDateString(undefined,{month:'short', day:'numeric'}) + ' · ' +
          d.toLocaleTimeString(undefined,{hour:'2-digit', minute:'2-digit'});
 }
-
+ 
 /* ---------- TABS ---------- */
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -431,14 +456,14 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.getElementById(btn.dataset.tab).classList.add('active');
   });
 });
-
+ 
 /* ---------- CLOCK ---------- */
 function tickClock(){
   const now = new Date();
   document.getElementById('clock').textContent = now.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'}) + '  ' + now.toLocaleTimeString(undefined,{hour:'2-digit', minute:'2-digit'});
 }
 tickClock(); setInterval(tickClock, 30000);
-
+ 
 /* ---------- GOALS ---------- */
 document.getElementById('goalForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -450,7 +475,7 @@ document.getElementById('goalForm').addEventListener('submit', e=>{
   document.getElementById('goalDeadline').value='';
   saveData(); renderGoals(); renderStats();
 });
-
+ 
 function renderGoals(){
   const list = document.getElementById('goalsList');
   if(DATA.goals.length===0){
@@ -471,7 +496,7 @@ function renderGoals(){
       </div>
     </div>
   `).join('');
-
+ 
   list.querySelectorAll('.goalRange').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const g = DATA.goals.find(x=>x.id===e.target.dataset.id);
@@ -488,7 +513,7 @@ function renderGoals(){
     });
   });
 }
-
+ 
 /* ---------- PROJECTS ---------- */
 document.getElementById('projectForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -502,7 +527,7 @@ document.getElementById('projectForm').addEventListener('submit', e=>{
   document.getElementById('projStatus').value='active';
   saveData(); renderProjects(); renderStats();
 });
-
+ 
 function renderProjects(){
   const list = document.getElementById('projectsList');
   if(DATA.projects.length===0){
@@ -527,7 +552,7 @@ function renderProjects(){
       </div>
     </div>
   `).join('');
-
+ 
   list.querySelectorAll('.statusSelect').forEach(sel=>{
     sel.addEventListener('change', e=>{
       const p = DATA.projects.find(x=>x.id===e.target.dataset.id);
@@ -542,7 +567,7 @@ function renderProjects(){
     });
   });
 }
-
+ 
 /* ---------- IDEAS ---------- */
 document.getElementById('ideaForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -552,7 +577,7 @@ document.getElementById('ideaForm').addEventListener('submit', e=>{
   document.getElementById('ideaText').value='';
   saveData(); renderIdeas(); renderStats();
 });
-
+ 
 function renderIdeas(){
   const list = document.getElementById('ideasList');
   if(DATA.ideas.length===0){
@@ -568,7 +593,7 @@ function renderIdeas(){
       </div>
     </div>
   `).join('');
-
+ 
   list.querySelectorAll('[data-action="delete-idea"]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       DATA.ideas = DATA.ideas.filter(i=>i.id!==e.target.dataset.id);
@@ -576,7 +601,7 @@ function renderIdeas(){
     });
   });
 }
-
+ 
 /* ---------- VACATION ---------- */
 document.getElementById('vacationForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -588,13 +613,13 @@ document.getElementById('vacationForm').addEventListener('submit', e=>{
   document.getElementById('vacationDate').value = '';
   saveData(); renderVacation(); renderStats();
 });
-
+ 
 function daysUntil(dateStr){
   const today = new Date(); today.setHours(0,0,0,0);
   const target = new Date(dateStr + 'T00:00:00');
   return Math.round((target - today) / 86400000);
 }
-
+ 
 function renderVacation(){
   const el = document.getElementById('vacationDisplay');
   if(!DATA.vacation){
@@ -603,7 +628,7 @@ function renderVacation(){
   }
   const days = daysUntil(DATA.vacation.date);
   const dateLabel = new Date(DATA.vacation.date + 'T00:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
-
+ 
   let middle;
   if(days > 0){
     middle = `<div class="vacation-count">${days}</div><div class="vacation-unit">${days===1?'Day':'Days'} To Go</div>`;
@@ -612,7 +637,7 @@ function renderVacation(){
   } else {
     middle = `<div class="vacation-here">Hope it was a great trip.</div>`;
   }
-
+ 
   el.innerHTML = `
     <div class="vacation-card">
       <div class="vacation-dest">${escapeHtml(DATA.vacation.destination)}</div>
@@ -622,13 +647,13 @@ function renderVacation(){
         <button class="ghost" id="clearVacation">Clear</button>
       </div>
     </div>`;
-
+ 
   document.getElementById('clearVacation').addEventListener('click', ()=>{
     DATA.vacation = null;
     saveData(); renderVacation(); renderStats();
   });
 }
-
+ 
 /* ---------- STATS ---------- */
 function renderStats(){
   document.getElementById('statActive').textContent = DATA.projects.filter(p=>p.status==='active').length;
@@ -636,18 +661,19 @@ function renderStats(){
   document.getElementById('statIdeas').textContent = DATA.ideas.length;
   document.getElementById('statVacation').textContent = DATA.vacation ? Math.max(daysUntil(DATA.vacation.date), 0) : '—';
 }
-
+ 
 function escapeHtml(str){
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
 }
-
+ 
 function renderAll(){
   renderGoals(); renderProjects(); renderIdeas(); renderVacation(); renderStats();
 }
-
+ 
 loadData();
 </script>
 </body>
 </html>
+ 
