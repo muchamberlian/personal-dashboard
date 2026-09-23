@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Signal — Personal Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12151B">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Signal">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -29,7 +35,7 @@
     -webkit-font-smoothing:antialiased;
   }
   .app{max-width:960px; margin:0 auto; padding:20px 16px 80px;}
- 
+
   /* Header / status strip */
   header{margin-bottom:24px;}
   .title-row{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
@@ -39,7 +45,7 @@
   }
   h1 span{color:var(--amber);}
   .clock{font-family:var(--mono); font-size:12px; color:var(--text-dim); letter-spacing:0.05em;}
- 
+
   .stat-strip{
     display:flex; gap:1px; background:var(--border); border:1px solid var(--border);
     border-radius:6px; overflow:hidden; font-family:var(--mono);
@@ -50,7 +56,7 @@
   .stat.amber .num{color:var(--amber);}
   .stat.teal .num{color:var(--teal);}
   .stat.brick .num{color:var(--brick);}
- 
+
   /* Tabs */
   .tabs{display:flex; gap:6px; margin:22px 0 16px; border-bottom:1px solid var(--border); padding-bottom:0;}
   .tab{
@@ -63,10 +69,10 @@
     content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--amber);
   }
   .tab:hover{color:var(--text);}
- 
+
   section{display:none;}
   section.active{display:block;}
- 
+
   /* Add form */
   .add-form{
     background:var(--panel); border:1px solid var(--border); border-radius:8px;
@@ -94,13 +100,13 @@
     border-radius:5px; padding:6px 10px; font-size:12px; cursor:pointer;
   }
   button.ghost:hover{color:var(--brick); border-color:var(--brick);}
- 
+
   /* Empty state */
   .empty{
     border:1px dashed var(--border); border-radius:8px; padding:28px 16px; text-align:center;
     color:var(--text-dim); font-size:13px; letter-spacing:0.02em;
   }
- 
+
   /* Goals — gauge style */
   .goal-card{background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:10px;}
   .goal-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px;}
@@ -113,7 +119,7 @@
   .goal-controls{display:flex; align-items:center; gap:10px; margin-top:10px;}
   .goal-controls input[type=range]{flex:1;}
   .goal-pct{font-family:var(--mono); font-size:12px; width:40px; text-align:right; color:var(--amber);}
- 
+
   /* Projects — ledger style */
   .project-row{
     display:grid; grid-template-columns:auto 1fr auto auto; gap:12px; align-items:center;
@@ -130,7 +136,7 @@
   .project-body .p-name{font-weight:700; font-size:14px; margin-bottom:2px;}
   .project-body .p-notes{font-size:12px; color:var(--text-dim);}
   .project-date{font-family:var(--mono); font-size:11px; color:var(--text-dim); white-space:nowrap;}
- 
+
   /* Ideas — log/notebook style */
   .idea-entry{
     border-left:2px solid var(--border); padding:4px 0 14px 14px; margin-bottom:2px; position:relative;
@@ -141,9 +147,29 @@
   }
   .idea-time{font-family:var(--mono); font-size:11px; color:var(--text-dim); margin-bottom:4px;}
   .idea-text{font-size:14px; line-height:1.5; white-space:pre-wrap;}
- 
+
   .card-actions{display:flex; gap:6px; justify-content:flex-end;}
- 
+
+  /* Stocks — ledger style */
+  .stock-row{
+    display:grid; grid-template-columns:auto 1fr auto auto auto; gap:14px; align-items:center;
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:12px 14px; margin-bottom:8px;
+  }
+  .stock-ticker{font-weight:800; font-size:14px; letter-spacing:0.03em;}
+  .stock-shares{font-family:var(--mono); font-size:11px; color:var(--text-dim);}
+  .stock-price{font-family:var(--mono); font-size:14px; text-align:right;}
+  .stock-value{font-family:var(--mono); font-size:14px; text-align:right; font-weight:700;}
+  .stock-gain{font-family:var(--mono); font-size:12px; text-align:right;}
+  .stock-gain.up{color:var(--teal);}
+  .stock-gain.down{color:var(--brick);}
+  #portfolioGainStat .num.up{color:var(--teal);}
+  #portfolioGainStat .num.down{color:var(--brick);}
+
+  @media (max-width:640px){
+    .stock-row{grid-template-columns:1fr auto; text-align:left;}
+  }
+
   /* Vacation countdown */
   .vacation-card{
     background:var(--panel); border:1px solid var(--border); border-radius:10px;
@@ -155,7 +181,7 @@
   .vacation-unit{font-family:var(--mono); font-size:11px; color:var(--text-dim); letter-spacing:0.2em; text-transform:uppercase; margin-top:4px;}
   .vacation-here{font-size:18px; font-weight:700; color:var(--teal); margin:10px 0;}
   .vacation-actions{display:flex; gap:8px; justify-content:center; margin-top:18px;}
- 
+
   /* Auth screen */
   .auth-wrap{
     min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
@@ -175,10 +201,35 @@
   .auth-toggle button{
     background:none; border:none; color:var(--amber); cursor:pointer; font-size:12px; text-decoration:underline;
   }
+  #forgotPasswordToggle{text-align:right; margin-top:-4px;}
   .hidden{display:none !important;}
-  .top-bar-account{display:flex; justify-content:flex-end; margin-bottom:8px;}
+  .top-bar-account{display:flex; justify-content:flex-end; margin-bottom:8px; position:relative;}
   .top-bar-account button{font-family:var(--mono);}
- 
+
+  .account-circle{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--amber); color:#1a1206; border:none;
+    font-weight:800; font-size:14px; letter-spacing:0;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-family:var(--sans);
+  }
+  .account-circle:hover{filter:brightness(1.08);}
+
+  .account-panel{
+    position:absolute; top:44px; right:0; z-index:20;
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:18px; width:280px; box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  .account-email{font-family:var(--mono); font-size:12px; color:var(--text-dim); margin-bottom:14px; word-break:break-all;}
+  .account-section{margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border);}
+  .account-section:last-of-type{border-bottom:none; padding-bottom:0; margin-bottom:12px;}
+  .account-section h3{font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; font-weight:700;}
+  .account-section .field{margin-bottom:8px;}
+  .account-section button.primary{width:100%; padding:7px;}
+  .account-msg{font-family:var(--mono); font-size:11px; margin-top:6px; min-height:14px;}
+  .account-msg.err{color:var(--brick);}
+  .account-msg.ok{color:var(--teal);}
+
   @media (max-width:560px){
     .stat-strip{flex-wrap:wrap;}
     .stat{min-width:45%;}
@@ -188,36 +239,101 @@
 </style>
 </head>
 <body>
- 
+
 <div class="auth-wrap" id="authScreen">
   <div class="auth-card">
-    <h1 id="authTitle">Login to Signal</h1>
-    <div class="auth-sub" id="authSub">Log in to sync your board across devices.</div>
-    <div class="field">
-      <label>Email</label>
-      <input type="text" id="authEmail" placeholder="you@example.com">
+
+    <!-- LOGIN / SIGN UP -->
+    <div id="loginSignupView">
+      <h1 id="authTitle">Login to Signal</h1>
+      <div class="auth-sub" id="authSub">Log in to sync your board across devices.</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="authEmail" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password">
+      </div>
+      <div class="field hidden" id="confirmPasswordField">
+        <label>Confirm Password</label>
+        <input type="password" id="authPasswordConfirm" placeholder="Re-enter your password" autocomplete="new-password">
+      </div>
+      <button class="primary" id="authSubmit" style="width:100%;">Log In</button>
+      <div class="auth-msg" id="authMsg"></div>
+      <div class="auth-toggle" id="forgotPasswordToggle">
+        <button id="forgotPasswordBtn">Forgot password?</button>
+      </div>
+      <div class="auth-toggle">
+        <span id="authToggleText">Don't have an account?</span>
+        <button id="authToggleBtn">Sign up</button>
+      </div>
     </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password">
+
+    <!-- FORGOT PASSWORD (request reset link) -->
+    <div id="forgotPasswordView" class="hidden">
+      <h1>Reset Your Password</h1>
+      <div class="auth-sub">Enter your account email and we'll send you a reset link.</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="resetEmail" placeholder="you@example.com">
+      </div>
+      <button class="primary" id="sendResetBtn" style="width:100%;">Send Reset Link</button>
+      <div class="auth-msg" id="resetMsg"></div>
+      <div class="auth-toggle">
+        <button id="backToLoginBtn">Back to log in</button>
+      </div>
     </div>
-    <div class="field hidden" id="confirmPasswordField">
-      <label>Confirm Password</label>
-      <input type="password" id="authPasswordConfirm" placeholder="Re-enter your password" autocomplete="new-password">
+
+    <!-- SET NEW PASSWORD (after clicking the email link) -->
+    <div id="setNewPasswordView" class="hidden">
+      <h1>Set A New Password</h1>
+      <div class="auth-sub">Choose a new password for your account.</div>
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" id="recoveryPassword" placeholder="At least 6 characters" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Confirm New Password</label>
+        <input type="password" id="recoveryPasswordConfirm" placeholder="Re-enter your password" autocomplete="new-password">
+      </div>
+      <button class="primary" id="setNewPasswordBtn" style="width:100%;">Update Password</button>
+      <div class="auth-msg" id="recoveryMsg"></div>
     </div>
-    <button class="primary" id="authSubmit" style="width:100%;">Log In</button>
-    <div class="auth-msg" id="authMsg"></div>
-    <div class="auth-toggle">
-      <span id="authToggleText">Don't have an account?</span>
-      <button id="authToggleBtn">Sign up</button>
-    </div>
+
   </div>
 </div>
- 
- 
+
+
 <div class="app hidden" id="dashboardApp">
   <div class="top-bar-account">
-    <button class="ghost" id="logoutBtn">Log Out</button>
+    <button class="account-circle" id="accountCircle">?</button>
+    <div class="account-panel hidden" id="accountPanel">
+      <div class="account-email" id="accountEmailDisplay"></div>
+
+      <div class="account-section">
+        <h3>Change Email</h3>
+        <div class="field">
+          <input type="text" id="newEmail" placeholder="New email address">
+        </div>
+        <button class="primary" id="changeEmailBtn">Update Email</button>
+        <div class="account-msg" id="emailMsg"></div>
+      </div>
+
+      <div class="account-section">
+        <h3>Change Password</h3>
+        <div class="field">
+          <input type="password" id="newPassword" placeholder="New password" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <input type="password" id="newPasswordConfirm" placeholder="Confirm new password" autocomplete="new-password">
+        </div>
+        <button class="primary" id="changePasswordBtn">Update Password</button>
+        <div class="account-msg" id="passwordMsg"></div>
+      </div>
+
+      <button class="ghost" id="logoutBtn" style="width:100%;">Log Out</button>
+    </div>
   </div>
   <header>
     <div class="title-row">
@@ -231,14 +347,15 @@
       <div class="stat teal"><div class="num" id="statVacation">—</div><div class="lbl">Days To Vacation</div></div>
     </div>
   </header>
- 
+
   <nav class="tabs">
     <button class="tab active" data-tab="goals">Goals</button>
     <button class="tab" data-tab="projects">Projects</button>
     <button class="tab" data-tab="ideas">Brain Dump</button>
     <button class="tab" data-tab="vacation">Vacation</button>
+    <button class="tab" data-tab="stocks">Stocks</button>
   </nav>
- 
+
   <!-- GOALS -->
   <section id="goals" class="active">
     <form class="add-form" id="goalForm">
@@ -256,7 +373,7 @@
     </form>
     <div id="goalsList"></div>
   </section>
- 
+
   <!-- PROJECTS -->
   <section id="projects">
     <form class="add-form" id="projectForm">
@@ -282,7 +399,7 @@
     </form>
     <div id="projectsList"></div>
   </section>
- 
+
   <!-- IDEAS / BRAIN DUMP -->
   <section id="ideas">
     <form class="add-form" id="ideaForm">
@@ -294,7 +411,7 @@
     </form>
     <div id="ideasList"></div>
   </section>
- 
+
   <section id="vacation">
     <div id="vacationDisplay"></div>
     <form class="add-form" id="vacationForm" style="margin-top:16px;">
@@ -311,8 +428,35 @@
       </div>
     </form>
   </section>
+
+  <!-- STOCKS -->
+  <section id="stocks">
+    <form class="add-form" id="stockForm">
+      <div class="add-form row">
+        <div class="field">
+          <label>Ticker</label>
+          <input type="text" id="stockTicker" placeholder="e.g. AAPL" required>
+        </div>
+        <div class="field">
+          <label>Shares</label>
+          <input type="text" id="stockShares" placeholder="e.g. 12" inputmode="decimal" required>
+        </div>
+        <div class="field">
+          <label>Avg Cost / Share</label>
+          <input type="text" id="stockCost" placeholder="e.g. 150.00" inputmode="decimal" required>
+        </div>
+        <button class="primary" type="submit">Add Holding</button>
+      </div>
+    </form>
+    <div class="stat-strip" id="portfolioStrip" style="margin-bottom:16px;">
+      <div class="stat teal"><div class="num" id="statPortfolioValue">—</div><div class="lbl">Portfolio Value</div></div>
+      <div class="stat" id="portfolioGainStat"><div class="num" id="statPortfolioGain">—</div><div class="lbl">Total Gain / Loss</div></div>
+    </div>
+    <div id="stocksList"></div>
+    <div class="goal-meta" id="stocksUpdated" style="margin-top:10px;"></div>
+  </section>
 </div>
- 
+
 <script>
 /* ---------- SUPABASE CONFIG ---------- */
 /* Fill these in from your Supabase project: Settings → API */
@@ -320,17 +464,21 @@ const SUPABASE_URL = 'https://nacthvsfmtcvqndrdnmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hY3RodnNmbXRjdnFuZHJkbm1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNDkwMDksImV4cCI6MjEwMDkyNTAwOX0.ZtxtaahQ-AD1pEAySd_2Kywxi9m08t7ENUNSiBD0K5U';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const TABLE = 'signal_board_data';
- 
-let DATA = { goals: [], projects: [], ideas: [], vacation: null };
+
+let DATA = { goals: [], projects: [], ideas: [], vacation: null, stocks: [] };
+/* Get a free key at finnhub.io (Sign Up -> Dashboard -> API key). Free tier covers this easily. */
+const FINNHUB_API_KEY = 'YOUR_FINNHUB_API_KEY';
+let priceCache = {}; // ticker -> { price, prevClose }
 let currentUser = null;
 let isSignupMode = false;
 let saveTimer = null;
- 
+
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
- 
+
 function showDashboard(){
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('dashboardApp').classList.remove('hidden');
+  populateAccountInfo();
 }
 function showAuthScreen(){
   document.getElementById('dashboardApp').classList.add('hidden');
@@ -341,7 +489,7 @@ function setAuthMsg(text, type){
   msg.textContent = text;
   msg.className = 'auth-msg' + (type ? ' ' + type : '');
 }
- 
+
 async function loadData(){
   const { data: { session } } = await sb.auth.getSession();
   if(session){
@@ -352,20 +500,21 @@ async function loadData(){
     showAuthScreen();
   }
 }
- 
+
 async function fetchBoardData(){
   const { data, error } = await sb.from(TABLE).select('data').eq('user_id', currentUser.id).maybeSingle();
   if(error){ console.error(error); }
   if(data && data.data){
     DATA = data.data;
     if(!('vacation' in DATA)) DATA.vacation = null;
+    if(!('stocks' in DATA) || !Array.isArray(DATA.stocks)) DATA.stocks = [];
   } else {
-    DATA = { goals: [], projects: [], ideas: [], vacation: null };
+    DATA = { goals: [], projects: [], ideas: [], vacation: null, stocks: [] };
     await sb.from(TABLE).insert({ user_id: currentUser.id, data: DATA });
   }
   renderAll();
 }
- 
+
 /* Debounced save so rapid actions (like dragging a goal slider) don't spam the database */
 function saveData(){
   clearTimeout(saveTimer);
@@ -379,7 +528,7 @@ function saveData(){
     }catch(e){ console.error('Save failed', e); }
   }, 400);
 }
- 
+
 /* ---------- AUTH ---------- */
 function applyAuthMode(){
   document.getElementById('authTitle').textContent = isSignupMode ? 'Sign up for Signal' : 'Login to Signal';
@@ -390,35 +539,100 @@ function applyAuthMode(){
   document.getElementById('authToggleText').textContent = isSignupMode ? 'Already have an account?' : "Don't have an account?";
   document.getElementById('authToggleBtn').textContent = isSignupMode ? 'Log In' : 'Sign up';
   document.getElementById('confirmPasswordField').classList.toggle('hidden', !isSignupMode);
+  document.getElementById('forgotPasswordToggle').classList.toggle('hidden', isSignupMode);
   document.getElementById('authPasswordConfirm').value = '';
   setAuthMsg('', null);
 }
- 
+
 document.getElementById('authToggleBtn').addEventListener('click', ()=>{
   isSignupMode = !isSignupMode;
   applyAuthMode();
 });
- 
+
+/* ---------- FORGOT / RESET PASSWORD ---------- */
+function showAuthView(view){
+  document.getElementById('loginSignupView').classList.toggle('hidden', view !== 'login');
+  document.getElementById('forgotPasswordView').classList.toggle('hidden', view !== 'forgot');
+  document.getElementById('setNewPasswordView').classList.toggle('hidden', view !== 'recovery');
+}
+
+document.getElementById('forgotPasswordBtn').addEventListener('click', ()=>{
+  document.getElementById('resetEmail').value = document.getElementById('authEmail').value.trim();
+  setAccountStyleMsg('resetMsg', '', null);
+  showAuthView('forgot');
+});
+
+document.getElementById('backToLoginBtn').addEventListener('click', ()=>{
+  showAuthView('login');
+});
+
+function setAccountStyleMsg(id, text, type){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'auth-msg' + (type ? ' ' + type : '');
+}
+
+document.getElementById('sendResetBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('resetEmail').value.trim();
+  if(!email){ setAccountStyleMsg('resetMsg', 'Enter your email address.', 'err'); return; }
+  setAccountStyleMsg('resetMsg', 'Sending…', null);
+  try{
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if(error){ setAccountStyleMsg('resetMsg', error.message, 'err'); return; }
+    setAccountStyleMsg('resetMsg', 'Check your email for a reset link.', 'ok');
+  }catch(e){
+    setAccountStyleMsg('resetMsg', 'Something went wrong. Try again.', 'err');
+  }
+});
+
+document.getElementById('setNewPasswordBtn').addEventListener('click', async ()=>{
+  const newPassword = document.getElementById('recoveryPassword').value;
+  const confirmPassword = document.getElementById('recoveryPasswordConfirm').value;
+  if(!newPassword || !confirmPassword){ setAccountStyleMsg('recoveryMsg', 'Fill in both fields.', 'err'); return; }
+  if(newPassword.length < 6){ setAccountStyleMsg('recoveryMsg', 'Password needs at least 6 characters.', 'err'); return; }
+  if(newPassword !== confirmPassword){ setAccountStyleMsg('recoveryMsg', 'Passwords don\u2019t match.', 'err'); return; }
+  setAccountStyleMsg('recoveryMsg', 'Updating…', null);
+  try{
+    const { data, error } = await sb.auth.updateUser({ password: newPassword });
+    if(error){ setAccountStyleMsg('recoveryMsg', error.message, 'err'); return; }
+    currentUser = data.user;
+    await fetchBoardData();
+    showAuthView('login');
+    showDashboard();
+  }catch(e){
+    setAccountStyleMsg('recoveryMsg', 'Something went wrong. Try again.', 'err');
+  }
+});
+
+/* Supabase redirects here with a recovery token in the URL; this fires once it's parsed */
+sb.auth.onAuthStateChange((event, session)=>{
+  if(event === 'PASSWORD_RECOVERY'){
+    showAuthScreen();
+    showAuthView('recovery');
+  }
+});
+
 document.getElementById('authSubmit').addEventListener('click', async ()=>{
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   if(!email || !password){ setAuthMsg('Enter an email and password.', 'err'); return; }
   if(password.length < 6){ setAuthMsg('Password needs at least 6 characters.', 'err'); return; }
- 
+
   if(isSignupMode){
     const confirmPassword = document.getElementById('authPasswordConfirm').value;
     if(!confirmPassword){ setAuthMsg('Please confirm your password.', 'err'); return; }
     if(password !== confirmPassword){ setAuthMsg('Passwords don\u2019t match.', 'err'); return; }
   }
- 
+
   setAuthMsg(isSignupMode ? 'Creating account…' : 'Logging in…', null);
   try{
     const result = isSignupMode
       ? await sb.auth.signUp({ email, password })
       : await sb.auth.signInWithPassword({ email, password });
- 
+
     if(result.error){ setAuthMsg(result.error.message, 'err'); return; }
- 
+
     if(isSignupMode && !result.data.session){
       setAuthMsg('Check your email to confirm, then log in.', 'ok');
       return;
@@ -430,19 +644,78 @@ document.getElementById('authSubmit').addEventListener('click', async ()=>{
     setAuthMsg('Something went wrong. Try again.', 'err');
   }
 });
- 
+
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await sb.auth.signOut();
   currentUser = null;
   showAuthScreen();
 });
- 
+
+/* ---------- ACCOUNT PANEL ---------- */
+function setAccountMsg(id, text, type){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'account-msg' + (type ? ' ' + type : '');
+}
+
+function populateAccountInfo(){
+  if(!currentUser) return;
+  const initial = currentUser.email ? currentUser.email[0].toUpperCase() : '?';
+  document.getElementById('accountCircle').textContent = initial;
+  document.getElementById('accountEmailDisplay').textContent = currentUser.email;
+}
+
+document.getElementById('accountCircle').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('accountPanel').classList.toggle('hidden');
+});
+
+document.addEventListener('click', (e)=>{
+  const panel = document.getElementById('accountPanel');
+  const circle = document.getElementById('accountCircle');
+  if(!panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== circle){
+    panel.classList.add('hidden');
+  }
+});
+
+document.getElementById('changeEmailBtn').addEventListener('click', async ()=>{
+  const newEmail = document.getElementById('newEmail').value.trim();
+  if(!newEmail){ setAccountMsg('emailMsg', 'Enter a new email address.', 'err'); return; }
+  setAccountMsg('emailMsg', 'Updating…', null);
+  try{
+    const { data, error } = await sb.auth.updateUser({ email: newEmail });
+    if(error){ setAccountMsg('emailMsg', error.message, 'err'); return; }
+    setAccountMsg('emailMsg', 'Check both your old and new inbox to confirm the change.', 'ok');
+    document.getElementById('newEmail').value = '';
+  }catch(e){
+    setAccountMsg('emailMsg', 'Something went wrong. Try again.', 'err');
+  }
+});
+
+document.getElementById('changePasswordBtn').addEventListener('click', async ()=>{
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('newPasswordConfirm').value;
+  if(!newPassword || !confirmPassword){ setAccountMsg('passwordMsg', 'Fill in both fields.', 'err'); return; }
+  if(newPassword.length < 6){ setAccountMsg('passwordMsg', 'Password needs at least 6 characters.', 'err'); return; }
+  if(newPassword !== confirmPassword){ setAccountMsg('passwordMsg', 'Passwords don\u2019t match.', 'err'); return; }
+  setAccountMsg('passwordMsg', 'Updating…', null);
+  try{
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if(error){ setAccountMsg('passwordMsg', error.message, 'err'); return; }
+    setAccountMsg('passwordMsg', 'Password updated.', 'ok');
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newPasswordConfirm').value = '';
+  }catch(e){
+    setAccountMsg('passwordMsg', 'Something went wrong. Try again.', 'err');
+  }
+});
+
 function fmtDate(ts){
   const d = new Date(ts);
   return d.toLocaleDateString(undefined,{month:'short', day:'numeric'}) + ' · ' +
          d.toLocaleTimeString(undefined,{hour:'2-digit', minute:'2-digit'});
 }
- 
+
 /* ---------- TABS ---------- */
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -452,14 +725,14 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.getElementById(btn.dataset.tab).classList.add('active');
   });
 });
- 
+
 /* ---------- CLOCK ---------- */
 function tickClock(){
   const now = new Date();
   document.getElementById('clock').textContent = now.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'}) + '  ' + now.toLocaleTimeString(undefined,{hour:'2-digit', minute:'2-digit'});
 }
 tickClock(); setInterval(tickClock, 30000);
- 
+
 /* ---------- GOALS ---------- */
 document.getElementById('goalForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -471,7 +744,7 @@ document.getElementById('goalForm').addEventListener('submit', e=>{
   document.getElementById('goalDeadline').value='';
   saveData(); renderGoals(); renderStats();
 });
- 
+
 function renderGoals(){
   const list = document.getElementById('goalsList');
   if(DATA.goals.length===0){
@@ -492,7 +765,7 @@ function renderGoals(){
       </div>
     </div>
   `).join('');
- 
+
   list.querySelectorAll('.goalRange').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const g = DATA.goals.find(x=>x.id===e.target.dataset.id);
@@ -509,7 +782,7 @@ function renderGoals(){
     });
   });
 }
- 
+
 /* ---------- PROJECTS ---------- */
 document.getElementById('projectForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -523,7 +796,7 @@ document.getElementById('projectForm').addEventListener('submit', e=>{
   document.getElementById('projStatus').value='active';
   saveData(); renderProjects(); renderStats();
 });
- 
+
 function renderProjects(){
   const list = document.getElementById('projectsList');
   if(DATA.projects.length===0){
@@ -548,7 +821,7 @@ function renderProjects(){
       </div>
     </div>
   `).join('');
- 
+
   list.querySelectorAll('.statusSelect').forEach(sel=>{
     sel.addEventListener('change', e=>{
       const p = DATA.projects.find(x=>x.id===e.target.dataset.id);
@@ -563,7 +836,7 @@ function renderProjects(){
     });
   });
 }
- 
+
 /* ---------- IDEAS ---------- */
 document.getElementById('ideaForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -573,7 +846,7 @@ document.getElementById('ideaForm').addEventListener('submit', e=>{
   document.getElementById('ideaText').value='';
   saveData(); renderIdeas(); renderStats();
 });
- 
+
 function renderIdeas(){
   const list = document.getElementById('ideasList');
   if(DATA.ideas.length===0){
@@ -589,7 +862,7 @@ function renderIdeas(){
       </div>
     </div>
   `).join('');
- 
+
   list.querySelectorAll('[data-action="delete-idea"]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       DATA.ideas = DATA.ideas.filter(i=>i.id!==e.target.dataset.id);
@@ -597,7 +870,7 @@ function renderIdeas(){
     });
   });
 }
- 
+
 /* ---------- VACATION ---------- */
 document.getElementById('vacationForm').addEventListener('submit', e=>{
   e.preventDefault();
@@ -609,13 +882,13 @@ document.getElementById('vacationForm').addEventListener('submit', e=>{
   document.getElementById('vacationDate').value = '';
   saveData(); renderVacation(); renderStats();
 });
- 
+
 function daysUntil(dateStr){
   const today = new Date(); today.setHours(0,0,0,0);
   const target = new Date(dateStr + 'T00:00:00');
   return Math.round((target - today) / 86400000);
 }
- 
+
 function renderVacation(){
   const el = document.getElementById('vacationDisplay');
   if(!DATA.vacation){
@@ -624,7 +897,7 @@ function renderVacation(){
   }
   const days = daysUntil(DATA.vacation.date);
   const dateLabel = new Date(DATA.vacation.date + 'T00:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
- 
+
   let middle;
   if(days > 0){
     middle = `<div class="vacation-count">${days}</div><div class="vacation-unit">${days===1?'Day':'Days'} To Go</div>`;
@@ -633,7 +906,7 @@ function renderVacation(){
   } else {
     middle = `<div class="vacation-here">Hope it was a great trip.</div>`;
   }
- 
+
   el.innerHTML = `
     <div class="vacation-card">
       <div class="vacation-dest">${escapeHtml(DATA.vacation.destination)}</div>
@@ -643,13 +916,122 @@ function renderVacation(){
         <button class="ghost" id="clearVacation">Clear</button>
       </div>
     </div>`;
- 
+
   document.getElementById('clearVacation').addEventListener('click', ()=>{
     DATA.vacation = null;
     saveData(); renderVacation(); renderStats();
   });
 }
- 
+
+/* ---------- STOCKS ---------- */
+document.getElementById('stockForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const ticker = document.getElementById('stockTicker').value.trim().toUpperCase();
+  const shares = parseFloat(document.getElementById('stockShares').value);
+  const costBasis = parseFloat(document.getElementById('stockCost').value);
+  if(!ticker || !shares || !costBasis) return;
+  DATA.stocks.unshift({ id:uid(), ticker, shares, costBasis });
+  document.getElementById('stockTicker').value = '';
+  document.getElementById('stockShares').value = '';
+  document.getElementById('stockCost').value = '';
+  saveData(); renderStocks();
+});
+
+async function fetchQuote(ticker){
+  try{
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${FINNHUB_API_KEY}`);
+    const data = await res.json();
+    if(data && typeof data.c === 'number' && data.c > 0){
+      priceCache[ticker] = { price: data.c, prevClose: data.pc };
+    }
+  }catch(e){ console.error('Quote fetch failed for', ticker, e); }
+}
+
+async function refreshAllQuotes(){
+  const tickers = [...new Set(DATA.stocks.map(s=>s.ticker))];
+  await Promise.all(tickers.map(fetchQuote));
+}
+
+function fmtMoney(n){
+  return n.toLocaleString(undefined, { style:'currency', currency:'USD' });
+}
+
+async function renderStocks(){
+  const list = document.getElementById('stocksList');
+  if(DATA.stocks.length===0){
+    list.innerHTML = '<div class="empty">No holdings yet. Add a ticker, shares, and your average cost above.</div>';
+    document.getElementById('statPortfolioValue').textContent = '—';
+    document.getElementById('statPortfolioGain').textContent = '—';
+    document.getElementById('stocksUpdated').textContent = '';
+    return;
+  }
+
+  if(FINNHUB_API_KEY === 'YOUR_FINNHUB_API_KEY'){
+    list.innerHTML = '<div class="empty">Add your free Finnhub API key in the code (FINNHUB_API_KEY) to pull live prices. Holdings are saved either way.</div>' +
+      DATA.stocks.map(s=>`
+        <div class="stock-row">
+          <div class="stock-ticker">${escapeHtml(s.ticker)}</div>
+          <div class="stock-shares">${s.shares} sh @ ${fmtMoney(s.costBasis)}</div>
+          <div class="stock-price">—</div>
+          <div class="stock-value">—</div>
+          <div class="card-actions"><button class="ghost" data-id="${s.id}" data-action="delete-stock">Remove</button></div>
+        </div>
+      `).join('');
+    attachStockDeleteHandlers();
+    return;
+  }
+
+  await refreshAllQuotes();
+
+  let totalValue = 0, totalCost = 0;
+
+  list.innerHTML = DATA.stocks.map(s=>{
+    const q = priceCache[s.ticker];
+    const price = q ? q.price : null;
+    const value = price ? price * s.shares : null;
+    const cost = s.costBasis * s.shares;
+    totalCost += cost;
+    if(value !== null) totalValue += value;
+    const gain = value !== null ? value - cost : null;
+    const gainPct = value !== null && cost > 0 ? (gain / cost) * 100 : null;
+    const gainClass = gain === null ? '' : (gain >= 0 ? 'up' : 'down');
+    const gainSign = gain !== null && gain > 0 ? '+' : '';
+
+    return `
+      <div class="stock-row">
+        <div class="stock-ticker">${escapeHtml(s.ticker)}</div>
+        <div class="stock-shares">${s.shares} sh @ ${fmtMoney(s.costBasis)}</div>
+        <div class="stock-price">${price !== null ? fmtMoney(price) : 'n/a'}</div>
+        <div class="stock-value">${value !== null ? fmtMoney(value) : 'n/a'}</div>
+        <div style="text-align:right;">
+          <div class="stock-gain ${gainClass}">${gain !== null ? gainSign + fmtMoney(gain) : ''}</div>
+          <div class="stock-gain ${gainClass}">${gainPct !== null ? gainSign + gainPct.toFixed(1) + '%' : ''}</div>
+        </div>
+        <div class="card-actions"><button class="ghost" data-id="${s.id}" data-action="delete-stock">Remove</button></div>
+      </div>
+    `;
+  }).join('');
+
+  attachStockDeleteHandlers();
+
+  const totalGain = totalValue - totalCost;
+  const totalGainPct = totalCost > 0 ? (totalGain / totalCost) * 100 : 0;
+  document.getElementById('statPortfolioValue').textContent = fmtMoney(totalValue);
+  const gainEl = document.getElementById('statPortfolioGain');
+  gainEl.textContent = (totalGain >= 0 ? '+' : '') + fmtMoney(totalGain) + ' (' + (totalGain>=0?'+':'') + totalGainPct.toFixed(1) + '%)';
+  gainEl.className = 'num ' + (totalGain >= 0 ? 'up' : 'down');
+  document.getElementById('stocksUpdated').textContent = 'Prices as of ' + new Date().toLocaleTimeString();
+}
+
+function attachStockDeleteHandlers(){
+  document.querySelectorAll('[data-action="delete-stock"]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      DATA.stocks = DATA.stocks.filter(s=>s.id!==e.target.dataset.id);
+      saveData(); renderStocks();
+    });
+  });
+}
+
 /* ---------- STATS ---------- */
 function renderStats(){
   document.getElementById('statActive').textContent = DATA.projects.filter(p=>p.status==='active').length;
@@ -657,19 +1039,32 @@ function renderStats(){
   document.getElementById('statIdeas').textContent = DATA.ideas.length;
   document.getElementById('statVacation').textContent = DATA.vacation ? Math.max(daysUntil(DATA.vacation.date), 0) : '—';
 }
- 
+
 function escapeHtml(str){
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
 }
- 
+
 function renderAll(){
-  renderGoals(); renderProjects(); renderIdeas(); renderVacation(); renderStats();
+  renderGoals(); renderProjects(); renderIdeas(); renderVacation(); renderStocks(); renderStats();
 }
- 
+
 loadData();
+
+/* Register service worker so the app installs and reloads instantly like a native app */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(e=>console.error('SW registration failed', e));
+  });
+}
+
+/* Refresh stock prices every 60s while the tab is open */
+setInterval(()=>{
+  if(DATA.stocks && DATA.stocks.length > 0 && document.getElementById('stocks').classList.contains('active')){
+    renderStocks();
+  }
+}, 60000);
 </script>
 </body>
 </html>
- 
