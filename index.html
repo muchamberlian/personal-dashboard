@@ -170,6 +170,29 @@
     .stock-row{grid-template-columns:1fr auto; text-align:left;}
   }
 
+  .sec-h{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:18px 0 8px}
+  .chip-due{font-family:var(--mono);font-size:11px;color:var(--text-dim);white-space:nowrap}
+  .chip-due.over{color:#E58A8F;background:rgba(193,102,107,.18);padding:3px 8px;border-radius:20px}
+  details.fold summary{cursor:pointer;color:var(--text-dim);font-size:13px;padding:10px 0}
+  .hsubs{display:flex;gap:8px}
+  .hsub{flex:1;min-height:44px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text-dim);cursor:pointer;font-size:14px}
+  .hsub.on{color:var(--amber);border-color:var(--amber)}
+  .hnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;font-weight:600}
+  .hrow{display:grid;grid-template-columns:minmax(80px,1.4fr) repeat(7,minmax(30px,1fr)) 28px;align-items:center;justify-items:center;gap:4px;padding:6px 0}
+  .hname{justify-self:start;font-size:13px}
+  .hdot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:transparent;padding:0;cursor:pointer}
+  .hdot.on.build{background:var(--teal);border-color:var(--teal)}
+  .hdot.on.quit{background:#E58A8F;border-color:#E58A8F}
+  .hdot:disabled{opacity:.35;cursor:default}
+  .hx{padding:0;width:28px}
+  .hbox{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px}
+  .hbox .sec-h{margin:4px 0}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px}
+  .cal div{height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .l0{background:var(--panel)}.l1{background:#234A4C}.l2{background:#2F7471}.l3{background:var(--teal);color:#0E1114}
+  .fut{color:var(--text-dim)}.tod{box-shadow:inset 0 0 0 2px var(--amber)}
+  .tot{display:grid;grid-template-columns:120px 1fr 52px;align-items:center;gap:8px;padding:5px 0;font-size:13px}
+  .bar{height:6px;background:#2A303B;border-radius:3px}.bar i{display:block;height:6px;border-radius:3px}
   /* Vacation countdown */
   .vacation-card{
     background:var(--panel); border:1px solid var(--border); border-radius:10px;
@@ -218,7 +241,7 @@
   .account-panel{
     position:absolute; top:44px; right:0; z-index:20;
     background:var(--panel); border:1px solid var(--border); border-radius:10px;
-    padding:18px; width:280px; box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    padding:18px; width:280px; max-height:80vh; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.4);
   }
   .account-email{font-family:var(--mono); font-size:12px; color:var(--text-dim); margin-bottom:14px; word-break:break-all;}
   .account-section{margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border);}
@@ -332,6 +355,11 @@
         <div class="account-msg" id="passwordMsg"></div>
       </div>
 
+      <div class="account-section">
+        <h3>Visible Tabs</h3>
+        <div id="tabToggles"></div>
+      </div>
+
       <button class="ghost" id="logoutBtn" style="width:100%;">Log Out</button>
     </div>
   </div>
@@ -351,6 +379,7 @@
   <nav class="tabs">
     <button class="tab active" data-tab="goals">Goals</button>
     <button class="tab" data-tab="projects">Projects</button>
+    <button class="tab" data-tab="habits">Habits</button>
     <button class="tab" data-tab="ideas">Brain Dump</button>
     <button class="tab" data-tab="vacation">Vacation</button>
     <button class="tab" data-tab="stocks">Stocks</button>
@@ -390,6 +419,10 @@
             <option value="done">Done</option>
           </select>
         </div>
+        <div class="field">
+          <label>Due</label>
+          <input type="date" id="projDue">
+        </div>
       </div>
       <div class="field">
         <label>Notes</label>
@@ -424,7 +457,21 @@
           <label>Date</label>
           <input type="date" id="vacationDate" required>
         </div>
-        <button class="primary" type="submit" style="width:auto;">Set Vacation</button>
+        <button class="primary" type="submit" style="width:auto;">Add Trip</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- HABITS -->
+  <section id="habits">
+    <div class="hsubs"><button class="hsub on" data-v="week">Week</button><button class="hsub" data-v="month">Month</button></div>
+    <div class="hnav"><button class="ghost" id="habitPrev" aria-label="Previous">‹</button><span id="habitLabel"></span><button class="ghost" id="habitNext" aria-label="Next">›</button><button class="ghost" id="habitToday">Today</button></div>
+    <div id="habitView"></div>
+    <form class="add-form" id="habitForm" style="margin-top:16px;">
+      <div class="add-form row">
+        <div class="field" style="flex:2;"><label>New Habit</label><input type="text" id="habitName" placeholder="e.g. Read 20 minutes" required></div>
+        <div class="field"><label>Type</label><select id="habitType"><option value="build">Build</option><option value="quit">Quit</option></select></div>
+        <button class="primary" type="submit">Add Habit</button>
       </div>
     </form>
   </section>
@@ -465,9 +512,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const TABLE = 'signal_board_data';
 
-let DATA = { goals: [], projects: [], ideas: [], vacation: null, stocks: [] };
+let DATA = { goals: [], projects: [], ideas: [], vacations: [], habits: [], habitLog: {}, hiddenTabs: [], stocks: [] };
 /* Get a free key at finnhub.io (Sign Up -> Dashboard -> API key). Free tier covers this easily. */
-const FINNHUB_API_KEY = 'daq2rlpr01qmpua2poo0daq2rlpr01qmpua2poog';
+const FINNHUB_API_KEY = 'YOUR_FINNHUB_API_KEY';
 let priceCache = {}; // ticker -> { price, prevClose }
 let currentUser = null;
 let isSignupMode = false;
@@ -506,10 +553,15 @@ async function fetchBoardData(){
   if(error){ console.error(error); }
   if(data && data.data){
     DATA = data.data;
-    if(!('vacation' in DATA)) DATA.vacation = null;
+    if(!Array.isArray(DATA.vacations)) DATA.vacations = [];
+    if(DATA.vacation){ DATA.vacations.push({id:uid(), destination:DATA.vacation.destination, date:DATA.vacation.date}); }
+    delete DATA.vacation;
+    if(!Array.isArray(DATA.habits)) DATA.habits = [];
+    if(!Array.isArray(DATA.hiddenTabs)) DATA.hiddenTabs = [];
+    if(!DATA.habitLog || typeof DATA.habitLog!=='object') DATA.habitLog = {};
     if(!('stocks' in DATA) || !Array.isArray(DATA.stocks)) DATA.stocks = [];
   } else {
-    DATA = { goals: [], projects: [], ideas: [], vacation: null, stocks: [] };
+    DATA = { goals: [], projects: [], ideas: [], vacations: [], habits: [], habitLog: {}, hiddenTabs: [], stocks: [] };
     await sb.from(TABLE).insert({ user_id: currentUser.id, data: DATA });
   }
   renderAll();
@@ -790,7 +842,8 @@ document.getElementById('projectForm').addEventListener('submit', e=>{
   const status = document.getElementById('projStatus').value;
   const notes = document.getElementById('projNotes').value.trim();
   if(!name) return;
-  DATA.projects.unshift({ id:uid(), name, status, notes, updated: Date.now() });
+  DATA.projects.unshift({ id:uid(), name, status, notes, due: document.getElementById('projDue').value || '', updated: Date.now() });
+  document.getElementById('projDue').value='';
   document.getElementById('projName').value='';
   document.getElementById('projNotes').value='';
   document.getElementById('projStatus').value='active';
@@ -803,15 +856,23 @@ function renderProjects(){
     list.innerHTML = '<div class="empty">No projects yet. Add one above to get it on the board.</div>';
     return;
   }
-  list.innerHTML = DATA.projects.map(p=>`
+  const today = ymd(new Date());
+  const key = p => p.due || '9999';
+  const cmp = (a,b) => key(a)<key(b)?-1 : key(a)>key(b)?1 : b.updated-a.updated;
+  const dl = d => new Date(d+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  const chip = p => !p.due ? '<span class="chip-due">No date</span>'
+    : (p.due<today && p.status!=='done') ? `<span class="chip-due over">Overdue · ${dl(p.due)}</span>`
+    : `<span class="chip-due">Due ${dl(p.due)}</span>`;
+  const row = p => `
     <div class="project-row">
       <div class="status-pill status-${p.status}">${p.status}</div>
       <div class="project-body">
         <div class="p-name">${escapeHtml(p.name)}</div>
         ${p.notes ? `<div class="p-notes">${escapeHtml(p.notes)}</div>` : ''}
       </div>
-      <div class="project-date">${fmtDate(p.updated)}</div>
+      <div class="project-date">${chip(p)}</div>
       <div class="card-actions">
+        <input type="date" class="dueInput" data-id="${p.id}" value="${p.due||''}" aria-label="Due date">
         <select class="statusSelect" data-id="${p.id}">
           <option value="active" ${p.status==='active'?'selected':''}>Active</option>
           <option value="waiting" ${p.status==='waiting'?'selected':''}>Waiting</option>
@@ -819,14 +880,22 @@ function renderProjects(){
         </select>
         <button class="ghost" data-id="${p.id}" data-action="delete-proj">Remove</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  const sec = (st,label) => { const a = DATA.projects.filter(p=>p.status===st).sort(cmp); return a.length ? `<div class="sec-h">${label} · ${a.length}</div>`+a.map(row).join('') : ''; };
+  const done = DATA.projects.filter(p=>p.status==='done').sort(cmp);
+  list.innerHTML = sec('active','Active') + sec('waiting','Waiting') + (done.length ? `<details class="fold"><summary>Done (${done.length})</summary>${done.map(row).join('')}</details>` : '');
 
   list.querySelectorAll('.statusSelect').forEach(sel=>{
     sel.addEventListener('change', e=>{
       const p = DATA.projects.find(x=>x.id===e.target.dataset.id);
       p.status = e.target.value; p.updated = Date.now();
       saveData(); renderProjects(); renderStats();
+    });
+  });
+  list.querySelectorAll('.dueInput').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      DATA.projects.find(x=>x.id===e.target.dataset.id).due = e.target.value;
+      saveData(); renderProjects();
     });
   });
   list.querySelectorAll('[data-action="delete-proj"]').forEach(btn=>{
@@ -877,7 +946,7 @@ document.getElementById('vacationForm').addEventListener('submit', e=>{
   const destination = document.getElementById('vacationDest').value.trim();
   const date = document.getElementById('vacationDate').value;
   if(!destination || !date) return;
-  DATA.vacation = { destination, date };
+  DATA.vacations.push({ id:uid(), destination, date });
   document.getElementById('vacationDest').value = '';
   document.getElementById('vacationDate').value = '';
   saveData(); renderVacation(); renderStats();
@@ -889,38 +958,47 @@ function daysUntil(dateStr){
   return Math.round((target - today) / 86400000);
 }
 
+function tripsSplit(){
+  const v = DATA.vacations || [];
+  return {
+    up: v.filter(t=>daysUntil(t.date)>=0).sort((a,b)=>a.date.localeCompare(b.date)),
+    past: v.filter(t=>daysUntil(t.date)<0).sort((a,b)=>b.date.localeCompare(a.date))
+  };
+}
+
 function renderVacation(){
   const el = document.getElementById('vacationDisplay');
-  if(!DATA.vacation){
-    el.innerHTML = '<div class="empty">No vacation set. Add a destination and date below.</div>';
+  const { up, past } = tripsSplit();
+  if(!up.length && !past.length){
+    el.innerHTML = '<div class="empty">No trips yet. Add a destination and date below.</div>';
     return;
   }
-  const days = daysUntil(DATA.vacation.date);
-  const dateLabel = new Date(DATA.vacation.date + 'T00:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
-
-  let middle;
-  if(days > 0){
-    middle = `<div class="vacation-count">${days}</div><div class="vacation-unit">${days===1?'Day':'Days'} To Go</div>`;
-  } else if(days === 0){
-    middle = `<div class="vacation-here">You're off today. Enjoy it. ✈</div>`;
-  } else {
-    middle = `<div class="vacation-here">Hope it was a great trip.</div>`;
-  }
-
-  el.innerHTML = `
-    <div class="vacation-card">
-      <div class="vacation-dest">${escapeHtml(DATA.vacation.destination)}</div>
-      <div class="vacation-date">${dateLabel}</div>
+  const lbl = (t,o) => new Date(t.date + 'T00:00:00').toLocaleDateString(undefined,o);
+  const mini = (t,right) => `<div class="project-row" style="grid-template-columns:1fr auto auto;">
+      <div><div class="p-name">${escapeHtml(t.destination)}</div><div class="p-notes">${lbl(t,{month:'short',day:'numeric',year:'numeric'})}</div></div>
+      <div class="project-date">${right}</div><button class="ghost" data-vid="${t.id}">Remove</button></div>`;
+  let html = '';
+  if(up.length){
+    const t = up[0], days = daysUntil(t.date);
+    const middle = days > 0
+      ? `<div class="vacation-count">${days}</div><div class="vacation-unit">${days===1?'Day':'Days'} To Go</div>`
+      : `<div class="vacation-here">You're off today. Enjoy it. ✈</div>`;
+    html += `<div class="vacation-card">
+      <div class="vacation-dest">${escapeHtml(t.destination)}</div>
+      <div class="vacation-date">${lbl(t,{weekday:'long', month:'long', day:'numeric', year:'numeric'})}</div>
       ${middle}
-      <div class="vacation-actions">
-        <button class="ghost" id="clearVacation">Clear</button>
-      </div>
+      <div class="vacation-actions"><button class="ghost" data-vid="${t.id}">Remove</button></div>
     </div>`;
-
-  document.getElementById('clearVacation').addEventListener('click', ()=>{
-    DATA.vacation = null;
+  } else {
+    html += '<div class="empty">No upcoming trips. Add one below.</div>';
+  }
+  if(up.length>1) html += '<div class="sec-h">Then</div>' + up.slice(1).map(t=>mini(t, daysUntil(t.date)+' days')).join('');
+  if(past.length) html += `<details class="fold"><summary>Past trips (${past.length})</summary>${past.map(t=>mini(t,'')).join('')}</details>`;
+  el.innerHTML = html;
+  el.querySelectorAll('[data-vid]').forEach(b=>b.addEventListener('click', ()=>{
+    DATA.vacations = DATA.vacations.filter(t=>t.id!==b.dataset.vid);
     saveData(); renderVacation(); renderStats();
-  });
+  }));
 }
 
 /* ---------- STOCKS ---------- */
@@ -1037,7 +1115,7 @@ function renderStats(){
   document.getElementById('statActive').textContent = DATA.projects.filter(p=>p.status==='active').length;
   document.getElementById('statGoals').textContent = DATA.goals.filter(g=>g.progress<100).length;
   document.getElementById('statIdeas').textContent = DATA.ideas.length;
-  document.getElementById('statVacation').textContent = DATA.vacation ? Math.max(daysUntil(DATA.vacation.date), 0) : '—';
+  { const u = tripsSplit().up; document.getElementById('statVacation').textContent = u.length ? daysUntil(u[0].date) : '—'; }
 }
 
 function escapeHtml(str){
@@ -1047,7 +1125,118 @@ function escapeHtml(str){
 }
 
 function renderAll(){
-  renderGoals(); renderProjects(); renderIdeas(); renderVacation(); renderStocks(); renderStats();
+  renderGoals(); renderProjects(); renderIdeas(); renderVacation(); renderHabits(); renderStocks(); renderStats(); applyTabVisibility();
+}
+
+/* ---------- TAB VISIBILITY ---------- */
+function applyTabVisibility(){
+  const hidden = DATA.hiddenTabs || [];
+  const tabs = [...document.querySelectorAll('.tab')];
+  tabs.forEach(b=>b.classList.toggle('hidden', hidden.includes(b.dataset.tab)));
+  const visible = tabs.filter(b=>!b.classList.contains('hidden'));
+  if(visible.length && !visible.some(b=>b.classList.contains('active'))) visible[0].click();
+  const box = document.getElementById('tabToggles');
+  box.innerHTML = tabs.map(b=>`<label style="display:flex;align-items:center;gap:10px;min-height:36px;font-size:13px;cursor:pointer;">
+    <input type="checkbox" data-tab="${b.dataset.tab}" ${hidden.includes(b.dataset.tab)?'':'checked'}> ${escapeHtml(b.textContent)}</label>`).join('');
+}
+document.getElementById('tabToggles').addEventListener('change', e=>{
+  const cb = e.target, t = cb.dataset.tab;
+  if(!cb.checked){
+    const shown = [...document.querySelectorAll('#tabToggles input:checked')].length;
+    if(shown < 1){ cb.checked = true; return; } /* keep at least one tab visible */
+    if(!DATA.hiddenTabs.includes(t)) DATA.hiddenTabs.push(t);
+  } else {
+    DATA.hiddenTabs = DATA.hiddenTabs.filter(x=>x!==t);
+  }
+  saveData();
+  const hidden = DATA.hiddenTabs;
+  const tabs = [...document.querySelectorAll('.tab')];
+  tabs.forEach(b=>b.classList.toggle('hidden', hidden.includes(b.dataset.tab)));
+  const visible = tabs.filter(b=>!b.classList.contains('hidden'));
+  if(visible.length && !visible.some(b=>b.classList.contains('active'))) visible[0].click();
+});
+
+/* ---------- HABITS ---------- */
+let habitView = 'week', habitAnchor = new Date();
+const ymd = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function mondayOf(d){ const x=new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+const habitsOf = t => DATA.habits.filter(h=>!h.archived && h.type===t);
+const isDone = (h,day) => (DATA.habitLog[day]||[]).includes(h.id);
+
+document.getElementById('habitForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = document.getElementById('habitName').value.trim();
+  if(!name) return;
+  DATA.habits.push({ id:uid(), name, type:document.getElementById('habitType').value, archived:false });
+  document.getElementById('habitName').value = '';
+  saveData(); renderHabits();
+});
+document.querySelectorAll('.hsub').forEach(b=>b.addEventListener('click', ()=>{ habitView=b.dataset.v; renderHabits(); }));
+function habitStep(n){
+  const d = new Date(habitAnchor);
+  if(habitView==='week') d.setDate(d.getDate()+7*n); else { d.setDate(1); d.setMonth(d.getMonth()+n); }
+  habitAnchor = d; renderHabits();
+}
+document.getElementById('habitPrev').addEventListener('click', ()=>habitStep(-1));
+document.getElementById('habitNext').addEventListener('click', ()=>habitStep(1));
+document.getElementById('habitToday').addEventListener('click', ()=>{ habitAnchor=new Date(); renderHabits(); });
+document.getElementById('habitView').addEventListener('click', e=>{
+  const dot = e.target.closest('.hdot'), arch = e.target.closest('[data-arch]');
+  if(dot){
+    const a = DATA.habitLog[dot.dataset.day] || (DATA.habitLog[dot.dataset.day] = []);
+    const i = a.indexOf(dot.dataset.hid);
+    if(i>=0) a.splice(i,1); else a.push(dot.dataset.hid);
+    if(!a.length) delete DATA.habitLog[dot.dataset.day];
+    saveData(); renderHabits();
+  } else if(arch){
+    DATA.habits.find(h=>h.id===arch.dataset.arch).archived = true;
+    saveData(); renderHabits();
+  }
+});
+
+function renderHabits(){
+  const el = document.getElementById('habitView'), label = document.getElementById('habitLabel');
+  const today = ymd(new Date());
+  document.querySelectorAll('.hsub').forEach(b=>b.classList.toggle('on', b.dataset.v===habitView));
+  const build = habitsOf('build'), quit = habitsOf('quit');
+  if(!build.length && !quit.length){ label.textContent=''; el.innerHTML='<div class="empty">No habits yet. Add one below.</div>'; return; }
+  let html = '';
+  if(habitView==='week'){
+    const ws = mondayOf(habitAnchor);
+    const days = [...Array(7)].map((_,i)=>{ const d=new Date(ws); d.setDate(d.getDate()+i); return d; });
+    const f = d => d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    label.textContent = f(days[0]) + ' – ' + f(days[6]);
+    const elapsed = days.filter(d=>ymd(d)<=today).length;
+    const row = h => `<div class="hrow"><span class="hname">${escapeHtml(h.name)}</span>` + days.map(d=>{
+      const s = ymd(d), on = isDone(h,s);
+      return `<button class="hdot ${on?'on '+h.type:''}" data-hid="${h.id}" data-day="${s}" ${s>today?'disabled':''} aria-label="${escapeHtml(h.name)} ${s}"></button>`;
+    }).join('') + `<button class="ghost hx" data-arch="${h.id}" aria-label="Archive ${escapeHtml(h.name)}" title="Archive">×</button></div>`;
+    const head = '<div class="hrow"><span></span>' + days.map(d=>`<span class="chip-due" style="${ymd(d)===today?'color:var(--amber)':''}">${'MTWTFSS'[(d.getDay()+6)%7]}</span>`).join('') + '<span></span></div>';
+    const count = list => list.reduce((n,h)=>n+days.filter(d=>ymd(d)<=today && isDone(h,ymd(d))).length,0);
+    const box = (t,title,list) => list.length ? `<div class="hbox"><div class="sec-h">${title}</div>${list.map(row).join('')}</div>` : '';
+    html = '<div class="hbox">'+head+'</div>' + box('build','Build',build) + box('quit','Quit · filled = stayed clean',quit)
+      + `<div class="hbox"><div class="sec-h">This week</div>Build ${count(build)} / ${build.length*elapsed} &nbsp;·&nbsp; Quit ${count(quit)} / ${quit.length*elapsed}</div>`;
+  } else {
+    const y = habitAnchor.getFullYear(), m = habitAnchor.getMonth();
+    label.textContent = new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+    const nDays = new Date(y,m+1,0).getDate(), blanks = (new Date(y,m,1).getDay()+6)%7;
+    const all = build.concat(quit);
+    let cells = '<div></div>'.repeat(blanks).replace(/<div><\/div>/g,'<div style="background:none"></div>');
+    let elapsed = 0;
+    for(let d=1; d<=nDays; d++){
+      const s = ymd(new Date(y,m,d));
+      if(s>today){ cells += `<div class="fut">${d}</div>`; continue; }
+      elapsed++;
+      const n = all.filter(h=>isDone(h,s)).length, r = n/all.length;
+      const l = n===0 ? 0 : r<=1/3 ? 1 : r<=2/3 ? 2 : 3;
+      cells += `<div class="l${l} ${s===today?'tod':''}">${d}</div>`;
+    }
+    const tot = h => { let n=0; for(let d=1; d<=nDays; d++){ const s=ymd(new Date(y,m,d)); if(s<=today && isDone(h,s)) n++; }
+      return `<div class="tot"><span>${escapeHtml(h.name)}</span><div class="bar"><i style="width:${elapsed?Math.round(n/elapsed*100):0}%;background:${h.type==='build'?'var(--teal)':'var(--brick)'}"></i></div><span class="chip-due" style="text-align:right">${n}/${elapsed}</span></div>`; };
+    html = '<div class="cal">'+['M','T','W','T','F','S','S'].map(x=>`<span class="chip-due" style="text-align:center">${x}</span>`).join('')+'</div><div class="cal">'+cells+'</div>'
+      + `<div class="hbox"><div class="sec-h">Totals</div>${all.map(tot).join('')}</div>`;
+  }
+  el.innerHTML = html;
 }
 
 loadData();
